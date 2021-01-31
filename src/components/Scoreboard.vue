@@ -1,9 +1,20 @@
 <template>
   <div id="scoreboard">
-    <h1>Scoreboard</h1>
+    <h1>Wheel</h1>
+    <p>
+      Selected player:
+      {{
+        selectedSegment !== undefined
+          ? players[experts[selectedSegment]].name
+          : 'N/A'
+      }}
+    </p>
+    <hr />
+    <p>Contestant: {{ players[contestant].name }}</p>
+    Experts:
     <ul>
-      <li v-for="player in players" :key="player.name">
-        {{ player.name }}
+      <li v-for="expert in expertPlayers" :key="expert.name">
+        {{ expert.name }}
       </li>
     </ul>
   </div>
@@ -17,6 +28,21 @@ export default defineComponent({
   computed: {
     players() {
       return this.$store.state.players;
+    },
+    selectedSegment() {
+      return this.$store.state.selectedSegment;
+    },
+    contestant() {
+      return this.$store.state.contestant;
+    },
+    experts() {
+      return this.$store.state.experts;
+    },
+    expertPlayers() {
+      const { players, experts } = this.$store.state;
+      return players.filter((player: never, index: string) =>
+        experts.includes(index)
+      );
     }
   }
 });

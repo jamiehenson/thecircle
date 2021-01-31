@@ -3,34 +3,35 @@
     <div id="stage">
       <div
         id="stage-segments"
-        :style="`${`transform: rotate(${spinTarget}deg), transition: ${
-          spin ? 'transition: transform 5s ease-in-out;' : ''
-        }`}`"
+        :style="{
+          transform: `rotate(${spinTarget}deg)`,
+          transition: `${spin ? 'transform 5s ease-in-out' : ''}`
+        }"
       >
         <div
-          v-for="(player, playerIndex) in players"
-          :key="player.name"
+          v-for="(expert, expertIndex) in experts"
+          :key="expertIndex"
           :style="{
             transform: `rotate(${
-              (360 / players.length) * playerIndex
-            }deg) skewY(${-(90 - 360 / players.length)}deg)`,
+              (360 / experts.length) * expertIndex
+            }deg) skewY(${-(90 - 360 / experts.length)}deg)`,
             backgroundColor: `hsl(${
-              360 * (playerIndex / players.length)
+              360 * (expertIndex / experts.length)
             }, 100%, 50%)`
           }"
           class="stage-segment"
         >
           <span
             :style="{
-              transform: `skewY(${90 - 360 / players.length}deg)`
+              transform: `skewY(${90 - 360 / experts.length}deg)`
             }"
             class="stage-segment-text"
           >
-            {{ player.name }}
+            {{ players[expert].name }}
           </span>
         </div>
       </div>
-      <div class="stage-center"></div>
+      <div class="stage-center">{{ players[contestant].name }}</div>
       <div class="stage-arrow"></div>
     </div>
   </div>
@@ -50,6 +51,12 @@ export default defineComponent({
     },
     spinTarget() {
       return this.$store.state.spinTarget;
+    },
+    experts() {
+      return this.$store.state.experts;
+    },
+    contestant() {
+      return this.$store.state.contestant;
     }
   }
 });
@@ -94,10 +101,16 @@ export default defineComponent({
   top: 40vh;
   height: 10vh;
   width: 10vh;
-  background: red;
+  background: black;
   position: absolute;
   border-radius: 100%;
   z-index: 1;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  border: 2px solid white;
 }
 .stage-arrow {
   left: calc(45vh - 10px);

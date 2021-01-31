@@ -1,6 +1,6 @@
 <template>
   <div id="wrapper">
-    <Stage :spin="spin" />
+    <Stage />
     <Scoreboard />
     <div id="counter">
       <div @click="increasePlayers">+</div>
@@ -20,6 +20,9 @@ export default defineComponent({
   components: {
     Stage,
     Scoreboard
+  },
+  created() {
+    this.$store.commit('randomiseBoard');
   },
   methods: {
     increasePlayers() {
