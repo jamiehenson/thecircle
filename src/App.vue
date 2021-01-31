@@ -2,10 +2,10 @@
   <div id="wrapper">
     <Stage />
     <Scoreboard />
-    <div id="counter">
-      <div @click="increasePlayers">+</div>
-      <div @click="decreasePlayers">-</div>
-      <div @click="spin">🌀</div>
+    <Info v-if="showInfo()" />
+    <div id="controls">
+      <div @click="spinAndAdvance">🌀</div>
+      <div @click="openSettings">⚙️</div>
     </div>
   </div>
 </template>
@@ -14,25 +14,25 @@
 import { defineComponent } from 'vue';
 import Stage from './components/Stage.vue';
 import Scoreboard from './components/Scoreboard.vue';
+import Info from './components/Info.vue';
+import { GameMode } from './types';
 
 export default defineComponent({
   name: 'App',
   components: {
     Stage,
-    Scoreboard
-  },
-  created() {
-    this.$store.commit('randomiseBoard');
+    Scoreboard,
+    Info
   },
   methods: {
-    increasePlayers() {
-      this.$store.commit('increasePlayers');
+    spinAndAdvance() {
+      this.$store.dispatch('spinAndAdvance');
     },
-    decreasePlayers() {
-      this.$store.commit('decreasePlayers');
+    openSettings() {
+      this.$store.dispatch('changeGameMode', GameMode.Setup);
     },
-    spin() {
-      this.$store.commit('spin');
+    showInfo() {
+      return this.$store.state.gameState.showInfo;
     }
   }
 });
@@ -52,7 +52,7 @@ body {
 #wrapper {
   display: flex;
 }
-#counter {
+#controls {
   font-size: 2rem;
   position: absolute;
   margin: 1rem;

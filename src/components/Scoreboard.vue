@@ -4,24 +4,26 @@
     <p>
       Selected player:
       {{
-        selectedSegment !== undefined
+        selectedSegment !== undefined && nonContestants.length > 0
           ? nonContestants[selectedSegment].name
-          : 'N/A'
+          : '?'
       }}
     </p>
     <hr />
-    <p>Contestant: {{ contestant.name }}</p>
+    <p>Contestant: {{ contestant?.name || '?' }}</p>
+    <p>Assistant: {{ assistant?.name || '?' }}</p>
     <p>
       Non-contestants: {{ nonContestants.map(({ name }) => name).join(', ') }}
     </p>
-    <p>Topic: N/A</p>
-    <p>Expert: {{ expert ? expert.name : 'N/A' }}</p>
-    <p>Shutdown: {{ shutdown ? shutdown.name : 'N/A' }}</p>
+    <p>Topic: {{ topic || '?' }}</p>
+    <p>Expert: {{ expert?.name || '?' }}</p>
+    <p>Shutdown: {{ shutdown?.name || '?' }}</p>
+    <p>Game state: {{ gameState }}</p>
   </div>
 </template>
 
 <script lang="ts">
-import { Player } from '@/store';
+import { Player, Topic } from '@/types';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -38,6 +40,11 @@ export default defineComponent({
         (player: Player) => player.contestant
       );
     },
+    assistant() {
+      return this.$store.state.players.find(
+        (player: Player) => player.assistant
+      );
+    },
     nonContestants() {
       return this.$store.state.players.filter(
         (player: Player) => !player.contestant
@@ -50,6 +57,12 @@ export default defineComponent({
       return this.$store.state.players.find(
         (player: Player) => player.shutdown
       );
+    },
+    gameState() {
+      return this.$store.state.gameState;
+    },
+    topic() {
+      return this.$store.state.topics.find((topic: Topic) => topic.active);
     }
   }
 });

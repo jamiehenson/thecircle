@@ -1,0 +1,12 @@
+[
+    {
+        "topic": "GENERAL_KNOWLEDGE",
+        "question": "How big is this question?",
+        "answers": [
+            { "answer": "Massive" },
+            { "answer": "Yuge" },
+            { "answer": "Underwhelming", "correct": true },
+            { "answer": "Portugal" }
+        ]
+    }
+]

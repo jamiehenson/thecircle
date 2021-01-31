@@ -9,14 +9,14 @@
         }"
       >
         <div
-          v-for="(nonContestant, nonContestantIndex) in nonContestants"
-          :key="nonContestantIndex"
+          v-for="(segment, segmentIndex) in segmentContent"
+          :key="segmentIndex"
           :style="{
             transform: `rotate(${
-              (360 / nonContestants.length) * nonContestantIndex
-            }deg) skewY(${-(90 - 360 / nonContestants.length)}deg)`,
+              (360 / segmentContent.length) * segmentIndex
+            }deg) skewY(${-(90 - 360 / segmentContent.length)}deg)`,
             backgroundColor: `hsl(${
-              360 * (nonContestantIndex / nonContestants.length)
+              360 * (segmentIndex / segmentContent.length)
             }, 100%, 50%)`
           }"
           class="stage-segment"
@@ -24,23 +24,23 @@
           <span
             :style="{
               transform: `skewY(${
-                90 - 360 / nonContestants.length
+                90 - 360 / segmentContent.length
               }deg) rotate(90deg)`
             }"
             class="stage-segment-text"
           >
-            {{ nonContestant.name }}
+            {{ segment.name }}
           </span>
         </div>
       </div>
-      <div class="stage-center">{{ contestant.name }}</div>
+      <div class="stage-center">{{ contestant?.name || '?' }}</div>
       <div class="stage-arrow"></div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Player } from '@/store';
+import { GameMode, Player } from '@/types';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -59,6 +59,14 @@ export default defineComponent({
       return this.$store.state.players.find(
         (player: Player) => player.contestant
       );
+    },
+    segmentContent() {
+      const { gameState, players, topics } = this.$store.state;
+      if (gameState.mode === GameMode.PickTopic) {
+        return topics.slice(0, players.count);
+      } else {
+        return players.filter((player: Player) => !player.contestant);
+      }
     },
     nonContestants() {
       return this.$store.state.players.filter(
@@ -97,6 +105,7 @@ export default defineComponent({
   height: 55vh;
   transform: rotate(90deg);
   transform-origin: bottom left;
+  transition: background-color 1s ease-in-out;
 }
 .stage-segment-text {
   font-size: 1rem;
@@ -104,10 +113,13 @@ export default defineComponent({
   font-weight: bold;
   text-transform: uppercase;
   position: absolute;
-  bottom: 10vh;
+  bottom: 43vh;
   color: white;
   user-select: none;
   text-shadow: 0px 0px 3px black;
+  max-width: 25vh;
+  text-align: right;
+  transform-origin: bottom left;
 }
 .stage-center {
   left: 40vh;
