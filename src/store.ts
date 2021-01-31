@@ -1,11 +1,31 @@
 import { InjectionKey } from 'vue';
 import { createStore, Store } from 'vuex';
 
-// define your typings for the store state
+export interface Player {
+  name: string;
+  contestant: boolean;
+  expert: boolean;
+  shutdown: boolean;
+}
+
+enum QuestionTopic {
+  Topic1,
+  Topic2,
+  Topic3
+}
+
+interface Question {
+  topic: QuestionTopic;
+  expertPlayer: Player;
+  shutdownPlayer: Player;
+  answers: {
+    answer: string;
+    correct: boolean;
+  };
+}
+
 export interface State {
-  players: { name: string }[];
-  experts: number[];
-  contestant: number;
+  players: Player[];
   spin: boolean;
   spinTarget: number;
   selectedSegment?: number;
@@ -14,7 +34,7 @@ export interface State {
 // define injection key
 export const key: InjectionKey<Store<State>> = Symbol();
 
-const testNames = [
+let testNames = [
   'Galina',
   'Rolando',
   'Gilbert',
@@ -37,14 +57,26 @@ const testNames = [
   'Desiree'
 ];
 
+const chooseName = () => {
+  const chosen = testNames[Math.floor(Math.random() * testNames.length)];
+  testNames.splice(testNames.indexOf(chosen), 1);
+  return chosen;
+};
+
+const initialPlayer = {
+  contestant: false,
+  expert: false,
+  shutdown: false
+};
+
 export const store = createStore<State>({
   state() {
     return {
       players: [
-        { name: testNames[Math.floor(Math.random() * testNames.length)] },
-        { name: testNames[Math.floor(Math.random() * testNames.length)] },
-        { name: testNames[Math.floor(Math.random() * testNames.length)] },
-        { name: testNames[Math.floor(Math.random() * testNames.length)] }
+        { ...initialPlayer, name: chooseName() },
+        { ...initialPlayer, name: chooseName() },
+        { ...initialPlayer, name: chooseName() },
+        { ...initialPlayer, name: chooseName() }
       ],
       experts: [],
       contestant: 0,
@@ -61,21 +93,24 @@ export const store = createStore<State>({
         state.spin = false;
         state.spinTarget = newSpinTarget % 360;
 
-        const expertCount = state.experts.length;
+        const playerCount = state.players.find((player) => player.contestant)
+          ? state.players.length - 1
+          : state.players.length;
 
-        const segmentAngle = 360 / expertCount;
+        const segmentAngle = 360 / playerCount;
         state.selectedSegment =
-          (expertCount -
+          (playerCount -
             Math.floor(
               (state.spinTarget - (180 - segmentAngle)) / segmentAngle
             )) %
-          expertCount;
+          playerCount;
       }, 5000);
     },
     increasePlayers(state) {
-      if (state.players.length < 8) {
+      if (state.players.length < 10) {
         state.players.push({
-          name: testNames[Math.floor(Math.random() * testNames.length)]
+          ...initialPlayer,
+          name: chooseName()
         });
       }
 
@@ -93,17 +128,13 @@ export const store = createStore<State>({
     randomiseBoard(state) {
       const { players } = state;
       const chosen = players[Math.floor(Math.random() * players.length)];
-      let newExperts: number[] = [];
 
-      players.forEach((player, index) => {
+      state.players = players.map((player) => {
         if (player === chosen) {
-          state.contestant = index;
-        } else {
-          newExperts.push(index);
+          player.contestant = true;
         }
+        return player;
       });
-
-      state.experts = newExperts;
     }
   }
 });

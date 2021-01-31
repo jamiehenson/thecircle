@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="stage-wrapper">
     <div id="stage">
       <div
         id="stage-segments"
@@ -9,35 +9,38 @@
         }"
       >
         <div
-          v-for="(expert, expertIndex) in experts"
-          :key="expertIndex"
+          v-for="(nonContestant, nonContestantIndex) in nonContestants"
+          :key="nonContestantIndex"
           :style="{
             transform: `rotate(${
-              (360 / experts.length) * expertIndex
-            }deg) skewY(${-(90 - 360 / experts.length)}deg)`,
+              (360 / nonContestants.length) * nonContestantIndex
+            }deg) skewY(${-(90 - 360 / nonContestants.length)}deg)`,
             backgroundColor: `hsl(${
-              360 * (expertIndex / experts.length)
+              360 * (nonContestantIndex / nonContestants.length)
             }, 100%, 50%)`
           }"
           class="stage-segment"
         >
           <span
             :style="{
-              transform: `skewY(${90 - 360 / experts.length}deg)`
+              transform: `skewY(${
+                90 - 360 / nonContestants.length
+              }deg) rotate(90deg)`
             }"
             class="stage-segment-text"
           >
-            {{ players[expert].name }}
+            {{ nonContestant.name }}
           </span>
         </div>
       </div>
-      <div class="stage-center">{{ players[contestant].name }}</div>
+      <div class="stage-center">{{ contestant.name }}</div>
       <div class="stage-arrow"></div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { Player } from '@/store';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -52,17 +55,27 @@ export default defineComponent({
     spinTarget() {
       return this.$store.state.spinTarget;
     },
-    experts() {
-      return this.$store.state.experts;
-    },
     contestant() {
-      return this.$store.state.contestant;
+      return this.$store.state.players.find(
+        (player: Player) => player.contestant
+      );
+    },
+    nonContestants() {
+      return this.$store.state.players.filter(
+        (player: Player) => !player.contestant
+      );
+    },
+    expert() {
+      return this.$store.state.players.find((player: Player) => player.expert);
     }
   }
 });
 </script>
 
 <style scoped>
+#stage-wrapper {
+  background: #192841;
+}
 #stage,
 #stage-segments {
   height: 90vh;
@@ -73,7 +86,7 @@ export default defineComponent({
 #stage {
   margin: 5vh;
   border-radius: 100%;
-  background: blue;
+  border: 2px solid white;
 }
 .stage-segment {
   border: 2px solid white;
@@ -92,9 +105,9 @@ export default defineComponent({
   text-transform: uppercase;
   position: absolute;
   bottom: 10vh;
-  left: 10vh;
   color: white;
   user-select: none;
+  text-shadow: 0px 0px 3px black;
 }
 .stage-center {
   left: 40vh;
@@ -109,15 +122,17 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 2vh;
   border: 2px solid white;
 }
 .stage-arrow {
-  left: calc(45vh - 10px);
+  left: 44vh;
   top: 45vh;
   height: 30vh;
-  width: 20px;
+  width: 2vh;
   background: white;
   position: absolute;
+  border-bottom-left-radius: 1vh;
+  border-bottom-right-radius: 1vh;
 }
 </style>

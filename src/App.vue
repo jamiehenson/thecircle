@@ -60,5 +60,6 @@ body {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  color: white;
 }
 </style>

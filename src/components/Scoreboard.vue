@@ -5,22 +5,23 @@
       Selected player:
       {{
         selectedSegment !== undefined
-          ? players[experts[selectedSegment]].name
+          ? nonContestants[selectedSegment].name
           : 'N/A'
       }}
     </p>
     <hr />
-    <p>Contestant: {{ players[contestant].name }}</p>
-    Experts:
-    <ul>
-      <li v-for="expert in expertPlayers" :key="expert.name">
-        {{ expert.name }}
-      </li>
-    </ul>
+    <p>Contestant: {{ contestant.name }}</p>
+    <p>
+      Non-contestants: {{ nonContestants.map(({ name }) => name).join(', ') }}
+    </p>
+    <p>Topic: N/A</p>
+    <p>Expert: {{ expert ? expert.name : 'N/A' }}</p>
+    <p>Shutdown: {{ shutdown ? shutdown.name : 'N/A' }}</p>
   </div>
 </template>
 
 <script lang="ts">
+import { Player } from '@/store';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -33,15 +34,21 @@ export default defineComponent({
       return this.$store.state.selectedSegment;
     },
     contestant() {
-      return this.$store.state.contestant;
+      return this.$store.state.players.find(
+        (player: Player) => player.contestant
+      );
     },
-    experts() {
-      return this.$store.state.experts;
+    nonContestants() {
+      return this.$store.state.players.filter(
+        (player: Player) => !player.contestant
+      );
     },
-    expertPlayers() {
-      const { players, experts } = this.$store.state;
-      return players.filter((player: never, index: string) =>
-        experts.includes(index)
+    expert() {
+      return this.$store.state.players.find((player: Player) => player.expert);
+    },
+    shutdown() {
+      return this.$store.state.players.find(
+        (player: Player) => player.shutdown
       );
     }
   }
