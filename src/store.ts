@@ -1,90 +1,24 @@
 import { InjectionKey } from 'vue';
 import { createStore, Store } from 'vuex';
+import {
+  DEFAULT_PLAYER_COUNT,
+  MAX_PLAYERS,
+  MIN_PLAYERS,
+  playerSetup,
+  SPIN_LENGTH,
+  topicSetup
+} from './helpers';
 import { GameMode, Player, State } from './types';
 
 export const key: InjectionKey<Store<State>> = Symbol();
 
-const spinLength = 5000;
-
-let testNames = [
-  'Galina',
-  'Rolando',
-  'Gilbert',
-  'Anjanette',
-  'Antonietta',
-  'Mirta',
-  'Burl',
-  'Miles',
-  'Jenelle',
-  'Anitra',
-  'Donya',
-  'Galen',
-  'Lesley',
-  'Junko',
-  'Latosha',
-  'Joel',
-  'Wilfred',
-  'Lecia',
-  'Kelvin',
-  'Desiree'
-];
-
-let testTopics = [
-  'General Knowledge',
-  'Food and Drink',
-  'Music',
-  'Film',
-  'Geography',
-  'Sports',
-  'News',
-  'Netflix',
-  'Anagrams',
-  'Animals',
-  'Football'
-];
-
-const chooseName = () => {
-  const chosen = testNames[Math.floor(Math.random() * testNames.length)];
-  testNames.splice(testNames.indexOf(chosen), 1);
-  return chosen;
-};
-
-const chooseTestTopic = () => {
-  const chosen = testTopics[Math.floor(Math.random() * testTopics.length)];
-  testTopics.splice(testTopics.indexOf(chosen), 1);
-  return chosen;
-};
-
-const initialPlayer = {
-  contestant: false,
-  assistant: false,
-  expert: false,
-  shutdown: false
-};
-
-const initialTopic = {
-  active: false,
-
-  questions: []
-};
-
-export const gameModeLabels = {
-  [GameMode.Setup]: 'THE CIRCLE',
-  [GameMode.PickTopic]: 'Pick Topic',
-  [GameMode.PickContestant]: 'Pick Contestant',
-  [GameMode.PickAssistant]: 'Pick Assistant',
-  [GameMode.AnswerQuestion]: 'Answer Question'
-};
-
 export const store = createStore<State>({
   state() {
+    const initialPlayers = playerSetup(DEFAULT_PLAYER_COUNT);
+    const initialTopics = topicSetup(DEFAULT_PLAYER_COUNT);
     return {
-      players: [
-        { ...initialPlayer, name: chooseName() },
-        { ...initialPlayer, name: chooseName() },
-        { ...initialPlayer, name: chooseName() }
-      ],
-      topics: [],
+      players: initialPlayers,
+      topics: initialTopics,
       spin: false,
       spinTarget: 0,
       gameState: {
@@ -106,10 +40,9 @@ export const store = createStore<State>({
       const players = state.players.map((player) => ({
         ...player,
         contestant: false,
-        expert: false,
-        shutdown: false,
         assistant: false
       }));
+
       state.players = players;
       state.gameState = {
         mode: GameMode.PickContestant,
@@ -122,19 +55,35 @@ export const store = createStore<State>({
         ...player,
         contestant: index === state.selectedSegment
       }));
+
       state.players = players;
       state.gameState = {
         mode: GameMode.PickTopic,
-        nextMode: GameMode.PickAssistant,
+        nextMode: GameMode.PickExpert,
         showInfo: true
       };
     },
-    goToPickAssistant(state) {
+    goToPickExpert(state) {
       const topics = state.topics.map((topic, index) => ({
         ...topic,
         active: index === state.selectedSegment
       }));
       state.topics = topics;
+
+      state.gameState = {
+        mode: GameMode.PickExpert,
+        nextMode: GameMode.PickShutdown,
+        showInfo: true
+      };
+    },
+    goToPickShutdown(state) {
+      state.gameState = {
+        mode: GameMode.PickShutdown,
+        nextMode: GameMode.PickAssistant,
+        showInfo: true
+      };
+    },
+    goToPickAssistant(state) {
       state.gameState = {
         mode: GameMode.PickAssistant,
         nextMode: GameMode.AnswerQuestion,
@@ -160,16 +109,17 @@ export const store = createStore<State>({
       state.spinTarget = newSpinTarget;
     },
     increasePlayers(state) {
-      if (state.players.length < 10) {
-        state.players.push({
-          ...initialPlayer,
-          name: chooseName()
-        });
+      if (state.players.length < MAX_PLAYERS) {
+        const newPlayerCount = state.players.length + 1;
+        state.players = playerSetup(newPlayerCount);
+        state.topics = topicSetup(newPlayerCount);
       }
     },
     decreasePlayers(state) {
-      if (state.players.length > 4) {
-        state.players = state.players.slice(0, state.players.length - 1);
+      if (state.players.length > MIN_PLAYERS) {
+        const newPlayerCount = state.players.length - 1;
+        state.players = playerSetup(newPlayerCount);
+        state.topics = topicSetup(newPlayerCount);
       }
     },
     closeInfo(state) {
@@ -184,6 +134,12 @@ export const store = createStore<State>({
           break;
         case GameMode.PickContestant:
           commit('goToPickContestant');
+          break;
+        case GameMode.PickExpert:
+          commit('goToPickExpert');
+          break;
+        case GameMode.PickShutdown:
+          commit('goToPickShutdown');
           break;
         case GameMode.PickAssistant:
           commit('goToPickAssistant');
@@ -204,11 +160,13 @@ export const store = createStore<State>({
         state.spin = false;
         state.spinTarget = state.spinTarget % 360;
 
+        const { players, gameState } = state;
+
         const playerCount =
-          state.players.find((player) => player.contestant) &&
-          state.gameState.mode !== GameMode.PickTopic
-            ? state.players.length - 1
-            : state.players.length;
+          players.find((player) => player.contestant) &&
+          gameState.mode !== GameMode.PickTopic
+            ? players.length - 1
+            : players.length;
 
         const segmentAngle = 360 / playerCount;
         state.selectedSegment =
@@ -218,8 +176,28 @@ export const store = createStore<State>({
             )) %
           playerCount;
 
-        dispatch('changeGameMode', state.gameState.nextMode);
-      }, spinLength);
+        dispatch('changeGameMode', gameState.nextMode);
+      }, SPIN_LENGTH);
+    },
+    setPlayerExpert({ dispatch, state }, id) {
+      const targetPlayer = state.players.find(
+        (player: Player) => player.id === id
+      );
+      if (targetPlayer) {
+        targetPlayer.expert = true;
+      }
+
+      dispatch('changeGameMode', state.gameState.nextMode);
+    },
+    setPlayerShutdown({ dispatch, state }, id) {
+      const targetPlayer = state.players.find(
+        (player: Player) => player.id === id
+      );
+      if (targetPlayer) {
+        targetPlayer.shutdown = true;
+      }
+
+      dispatch('changeGameMode', state.gameState.nextMode);
     }
   }
 });

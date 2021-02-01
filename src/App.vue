@@ -2,10 +2,19 @@
   <div id="wrapper">
     <Stage />
     <Scoreboard />
-    <Info v-if="showInfo()" />
+    <transition name="fade">
+      <Info v-if="showInfo" />
+    </transition>
     <div id="controls">
-      <div @click="spinAndAdvance">🌀</div>
-      <div @click="openSettings">⚙️</div>
+      <transition name="fade">
+        <div
+          v-if="showSpin"
+          :class="{ spinning: spin }"
+          @click="spinAndAdvance"
+        >
+          🌀
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -24,15 +33,22 @@ export default defineComponent({
     Scoreboard,
     Info
   },
-  methods: {
-    spinAndAdvance() {
-      this.$store.dispatch('spinAndAdvance');
-    },
-    openSettings() {
-      this.$store.dispatch('changeGameMode', GameMode.Setup);
+  computed: {
+    spin() {
+      return this.$store.state.spin;
     },
     showInfo() {
       return this.$store.state.gameState.showInfo;
+    },
+    showSpin() {
+      return ![GameMode.PickExpert, GameMode.PickShutdown].includes(
+        this.$store.state.gameState.mode
+      );
+    }
+  },
+  methods: {
+    spinAndAdvance() {
+      this.$store.dispatch('spinAndAdvance');
     }
   }
 });
@@ -53,7 +69,7 @@ body {
   display: flex;
 }
 #controls {
-  font-size: 2rem;
+  font-size: 8vh;
   position: absolute;
   margin: 1rem;
   display: flex;
@@ -61,5 +77,24 @@ body {
   align-items: center;
   cursor: pointer;
   color: white;
+}
+.spinning {
+  animation: spin 1s infinite linear;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

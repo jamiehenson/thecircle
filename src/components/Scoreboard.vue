@@ -1,29 +1,23 @@
 <template>
   <div id="scoreboard">
-    <h1>Wheel</h1>
-    <p>
-      Selected player:
-      {{
-        selectedSegment !== undefined && nonContestants.length > 0
-          ? nonContestants[selectedSegment].name
-          : '?'
-      }}
-    </p>
-    <hr />
-    <p>Contestant: {{ contestant?.name || '?' }}</p>
-    <p>Assistant: {{ assistant?.name || '?' }}</p>
+    <h1>The Circle</h1>
+    <p>Stage: {{ gameMode }}</p>
     <p>
       Non-contestants: {{ nonContestants.map(({ name }) => name).join(', ') }}
     </p>
-    <p>Topic: {{ topic || '?' }}</p>
+    <hr />
+    <p>Contestant: {{ contestant?.name || '?' }}</p>
+    <p>Topic: {{ topic?.name || '?' }}</p>
     <p>Expert: {{ expert?.name || '?' }}</p>
     <p>Shutdown: {{ shutdown?.name || '?' }}</p>
-    <p>Game state: {{ gameState }}</p>
+    <p>Assistant: {{ assistant?.name || '?' }}</p>
+    <hr />
   </div>
 </template>
 
 <script lang="ts">
-import { Player, Topic } from '@/types';
+import { gameModeLabels } from '@/helpers';
+import { GameMode, Player, Topic } from '@/types';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -58,8 +52,8 @@ export default defineComponent({
         (player: Player) => player.shutdown
       );
     },
-    gameState() {
-      return this.$store.state.gameState;
+    gameMode() {
+      return gameModeLabels[this.$store.state.gameState.mode as GameMode];
     },
     topic() {
       return this.$store.state.topics.find((topic: Topic) => topic.active);

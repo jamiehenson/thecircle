@@ -5,31 +5,39 @@
         id="stage-segments"
         :style="{
           transform: `rotate(${spinTarget}deg)`,
-          transition: `${spin ? 'transform 5s ease-in-out' : ''}`
+          transition: `${spin ? `transform ${spinLength}ms ease-in-out` : ''}`
         }"
       >
         <div
           v-for="(segment, segmentIndex) in segmentContent"
           :key="segmentIndex"
           :style="{
-            transform: `rotate(${
-              (360 / segmentContent.length) * segmentIndex
-            }deg) skewY(${-(90 - 360 / segmentContent.length)}deg)`,
-            backgroundColor: `hsl(${
-              360 * (segmentIndex / segmentContent.length)
-            }, 100%, 50%)`
+            transform: segmentTransform(segmentIndex, segmentContent.length),
+            backgroundColor: segmentColor(
+              segment,
+              segmentIndex,
+              segmentContent.length
+            )
           }"
-          class="stage-segment"
+          :class="{
+            'stage-segment': true,
+            'stage-segment-interactive': pickExpert || pickShutdown(segment),
+            'stage-segment-pick-expert': pickExpert,
+            'stage-segment-pick-shutdown': pickShutdown(segment)
+          }"
+          @click="setSegmentType(segment)"
         >
           <span
             :style="{
-              transform: `skewY(${
-                90 - 360 / segmentContent.length
-              }deg) rotate(90deg)`
+              transform: segmentTextTransform(segmentContent.length)
             }"
             class="stage-segment-text"
           >
-            {{ segment.name }}
+            {{
+              `${segment.name}${segment.expert ? ' 👑' : ''}${
+                segment.shutdown ? ' ⛔️' : ''
+              }`
+            }}
           </span>
         </div>
       </div>
@@ -40,8 +48,9 @@
 </template>
 
 <script lang="ts">
-import { GameMode, Player } from '@/types';
+import { GameMode, Player, Topic } from '@/types';
 import { defineComponent } from 'vue';
+import { SPIN_LENGTH } from '@/helpers';
 
 export default defineComponent({
   name: 'Stage',
@@ -60,21 +69,55 @@ export default defineComponent({
         (player: Player) => player.contestant
       );
     },
+    expert() {
+      return this.$store.state.players.find((player: Player) => player.expert);
+    },
     segmentContent() {
       const { gameState, players, topics } = this.$store.state;
       if (gameState.mode === GameMode.PickTopic) {
-        return topics.slice(0, players.count);
+        return topics;
       } else {
         return players.filter((player: Player) => !player.contestant);
       }
     },
-    nonContestants() {
-      return this.$store.state.players.filter(
-        (player: Player) => !player.contestant
-      );
+    spinLength() {
+      return SPIN_LENGTH;
     },
-    expert() {
-      return this.$store.state.players.find((player: Player) => player.expert);
+    pickExpert() {
+      return this.$store.state.gameState.mode === GameMode.PickExpert;
+    }
+  },
+  methods: {
+    segmentColor(segment: Player, segmentIndex: number, segmentCount: number) {
+      if (segment.expert) {
+        return 'gold';
+      } else if (segment.shutdown) {
+        return 'red';
+      } else {
+        return `hsl(${360 * (segmentIndex / segmentCount)}, 100%, 80%)`;
+      }
+    },
+    segmentTransform(segmentIndex: number, segmentCount: number) {
+      return `rotate(${(360 / segmentCount) * segmentIndex}deg) skewY(${-(
+        90 -
+        360 / segmentCount
+      )}deg)`;
+    },
+    segmentTextTransform(segmentCount: number) {
+      return `skewY(${90 - 360 / segmentCount}deg) rotate(90deg)`;
+    },
+    setSegmentType(player: Player) {
+      if (this.pickExpert) {
+        this.$store.dispatch('setPlayerExpert', player.id);
+      } else if (this.pickShutdown(player)) {
+        this.$store.dispatch('setPlayerShutdown', player.id);
+      }
+    },
+    pickShutdown(player: Player) {
+      return (
+        this.$store.state.gameState.mode === GameMode.PickShutdown &&
+        player.id !== this.expert.id
+      );
     }
   }
 });
@@ -105,7 +148,16 @@ export default defineComponent({
   height: 55vh;
   transform: rotate(90deg);
   transform-origin: bottom left;
-  transition: background-color 1s ease-in-out;
+  transition: background-color 0.25s ease-in-out, transform 1s ease-in-out;
+}
+.stage-segment-interactive {
+  cursor: pointer;
+}
+.stage-segment-pick-expert:hover {
+  background: gold !important;
+}
+.stage-segment-pick-shutdown:hover {
+  background: red !important;
 }
 .stage-segment-text {
   font-size: 1rem;
@@ -117,16 +169,15 @@ export default defineComponent({
   color: white;
   user-select: none;
   text-shadow: 0px 0px 3px black;
-  max-width: 25vh;
-  text-align: right;
+  max-width: 40vh;
   transform-origin: bottom left;
 }
 .stage-center {
-  left: 40vh;
-  top: 40vh;
-  height: 10vh;
-  width: 10vh;
-  background: black;
+  left: 35vh;
+  top: 35vh;
+  height: 20vh;
+  width: 20vh;
+  background: #152238;
   position: absolute;
   border-radius: 100%;
   z-index: 1;
@@ -134,8 +185,14 @@ export default defineComponent({
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2vh;
+  font-size: 3vh;
+  font-weight: bold;
   border: 2px solid white;
+  user-select: none;
+  padding: 2vh;
+  box-sizing: border-box;
+  text-align: center;
+  word-break: all;
 }
 .stage-arrow {
   left: 44vh;
@@ -146,5 +203,6 @@ export default defineComponent({
   position: absolute;
   border-bottom-left-radius: 1vh;
   border-bottom-right-radius: 1vh;
+  pointer-events: none;
 }
 </style>

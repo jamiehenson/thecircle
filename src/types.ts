@@ -14,6 +14,7 @@ export interface GameState {
 }
 
 export interface Player {
+  id: number;
   name: string;
   contestant: boolean;
   assistant: boolean;
@@ -24,8 +25,6 @@ export interface Player {
 export interface Topic {
   name: string;
   active: boolean;
-  expert?: Player;
-  shutdown?: Player;
   questions: Question[];
 }
 
@@ -33,6 +32,8 @@ export enum GameMode {
   Setup = 'SETUP',
   PickContestant = 'PICK_CONTESTANT',
   PickTopic = 'PICK_TOPIC',
+  PickExpert = 'PICK_EXPERT',
+  PickShutdown = 'PICK_SHUTDOWN',
   PickAssistant = 'PICK_NON_CONTESTANT',
   AnswerQuestion = 'ANSWER_QUESTION'
 }

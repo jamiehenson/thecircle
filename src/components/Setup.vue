@@ -6,7 +6,7 @@
       <span @click="decreasePlayers">-</span>
     </p>
     <div v-for="(player, playerIndex) in players" :key="playerIndex">
-      <input v-model="player.name" />
+      <input v-model="player.name" maxlength="15" />
     </div>
   </div>
 </template>
@@ -34,9 +34,8 @@ export default defineComponent({
 
 <style scoped>
 #setup-box {
-  background: blue;
+  background: #1c2e4a;
   padding: 3vh;
-  margin-bottom: 3vh;
   border-radius: 1vh;
 }
 .player-control {
@@ -64,6 +63,7 @@ input {
   margin-top: 2vh;
   text-align: center;
   font-weight: bold;
+  font-family: Avenir, Helvetica, sans-serif;
 }
 h2 {
   margin-top: 0;
