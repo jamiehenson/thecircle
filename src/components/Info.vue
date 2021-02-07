@@ -78,9 +78,9 @@ export default defineComponent({
         case GameMode.PickTopic:
           return `${this.$store.getters.getContestant?.name}, you're up!`;
         case GameMode.PickExpert:
-          return `${this.$store.getters.getTopic?.name} is the our new topic.`;
+          return `${this.$store.getters.getTopic?.name} is our new topic.`;
         case GameMode.PickShutdown:
-          return `${this.$store.getters.getExpert?.name} is the expert on ${this.$store.getters.getTopic?.name}.`;
+          return `${this.$store.getters.getExpert?.name} is the expert on ${this.$store.getters.getTopic?.name}. Who knew?`;
         case GameMode.PickAssistant:
           return `${this.$store.getters.getShutdown?.name} will shut down the round.`;
         case GameMode.EndGame:

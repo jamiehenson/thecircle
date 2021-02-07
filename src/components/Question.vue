@@ -59,7 +59,9 @@ export default defineComponent({
             this.$store.dispatch('goToNextQuestion');
           }
         } else {
-          this.$store.dispatch('playerHasAttemptedFinalQuestion', this.$store.getters.getContestant);
+          if (this.$store.state.finalQuestion) {
+            this.$store.dispatch('playerHasAttemptedFinalQuestion', this.$store.getters.getContestant);
+          }
           this.$store.dispatch('changeGameMode', GameMode.PickContestant);
         }
       }, UI_INTERACTION_LENGTH);

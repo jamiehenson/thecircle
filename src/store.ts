@@ -56,23 +56,22 @@ export const store = createStore<State>({
       state.showInfo = true;
     },
     goToPickTopic(state) {
-      // const existingContestant = state.players.find((player) => player.contestant);
-
       state.topics.forEach((topic) => (topic.active = false));
 
       const activeWheelPlayerIds = getActiveWheelPlayers(state.players).map(({ id }: Player) => id);
+      const activeContestant = state.players.find((player: Player) => player.contestant);
 
       state.players = state.players.map((player: Player) => {
         if (activeWheelPlayerIds.includes(player.id)) {
           return {
             ...player,
-            contestant: activeWheelPlayerIds.indexOf(player.id) === state.selectedSegment,
+            contestant: !activeContestant && activeWheelPlayerIds.indexOf(player.id) === state.selectedSegment,
             expert: false,
             shutdown: false,
             assistant: false
           };
         } else {
-          return player;
+          return { ...player };
         }
       });
 
