@@ -2,67 +2,56 @@
   <div id="info-bg">
     <div id="info-box">
       <h1>{{ gameModeHeading }}</h1>
-      <Setup v-if="inSetup" />
-      <p v-else>{{ contextualMessage }}</p>
-      <button v-if="inSetup" @click="startGame">Start New Game</button>
-      <button v-else @click="closeInfo">ADVANCE</button>
+      <div v-if="inSetup">
+        <Setup />
+        <button @click="startGame">Start New Game</button>
+      </div>
+      <div v-else-if="inQuestion">
+        <Question />
+      </div>
+      <div v-else>
+        <p>{{ contextualMessage }}</p>
+        <button @click="closeInfo">ADVANCE</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { gameModeLabels } from '@/helpers';
 import { GameMode, Player, Topic } from '@/types';
 import { defineComponent } from 'vue';
 import Setup from './Setup.vue';
+import Question from './Question.vue';
+import { gameModeLabels } from '@/helpers';
 
 export default defineComponent({
   name: 'Info',
   components: {
-    Setup
+    Setup,
+    Question
   },
   computed: {
     inSetup() {
-      return this.$store.state.gameState.mode === GameMode.Setup;
+      return this.$store.state.mode === GameMode.Setup;
+    },
+    inQuestion() {
+      return this.$store.state.mode === GameMode.AnswerQuestion;
     },
     gameModeHeading() {
-      return gameModeLabels[this.$store.state.gameState.mode as GameMode];
+      return gameModeLabels[this.$store.state.mode as GameMode];
     },
     contextualMessage() {
-      const { mode } = this.$store.state.gameState;
-      const {
-        PickTopic,
-        PickExpert,
-        PickShutdown,
-        PickAssistant,
-        AnswerQuestion
-      } = GameMode;
+      const { mode } = this.$store.state;
+      const { PickTopic, PickExpert, PickShutdown, PickAssistant } = GameMode;
       switch (mode) {
         case PickTopic:
-          return `Contestant: ${
-            this.$store.state.players.find(
-              (player: Player) => player.contestant
-            )?.name
-          }`;
+          return `Contestant: ${this.$store.getters.getContestant.name}`;
         case PickExpert:
-          return `Topic: ${
-            this.$store.state.topics.find((topic: Topic) => topic.active)?.name
-          }`;
+          return `Topic: ${this.$store.getters.getTopic.name}`;
         case PickShutdown:
-          return `Expert: ${
-            this.$store.state.players.find((player: Player) => player.expert)
-              ?.name
-          }`;
+          return `Expert: ${this.$store.getters.getExpert.name}`;
         case PickAssistant:
-          return `Shutdown: ${
-            this.$store.state.players.find((player: Player) => player.shutdown)
-              ?.name
-          }`;
-        case AnswerQuestion:
-          return `Assistant: ${
-            this.$store.state.players.find((player: Player) => player.assistant)
-              ?.name
-          }`;
+          return `Shutdown: ${this.$store.getters.getShutdown.name}`;
         default:
           return "Let's go!";
       }
@@ -88,16 +77,14 @@ export default defineComponent({
   height: 100%;
   top: 0;
   left: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.8);
 }
 #info-box {
-  background: #152238;
+  background-color: var(--blue);
   border: 2px solid white;
-  color: white;
-  position: absolute;
+  color: var(--white);
+  margin: 5vh auto;
   width: 60vh;
-  left: 20vh;
-  top: 5vh;
   padding: 3vh;
   border-radius: 2vh;
   box-sizing: border-box;
@@ -108,23 +95,7 @@ export default defineComponent({
 }
 h1 {
   margin-top: 0;
-}
-button {
-  font-size: 2vh;
-  padding: 1vh;
-  width: 100%;
-  box-sizing: border-box;
-  cursor: pointer;
-  border-radius: 1vh;
-  border: 0;
-  font-family: Avenir, Helvetica, sans-serif;
-  font-weight: bold;
-  text-transform: uppercase;
-  transition: background 0.2s ease-in-out;
-  margin-top: 3vh;
-}
-button:hover {
-  background: lightgrey;
+  font-size: 4vh;
 }
 .fade-enter-active,
 .fade-leave-active {

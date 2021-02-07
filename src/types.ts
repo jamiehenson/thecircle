@@ -1,49 +1,57 @@
 export interface State {
-  players: Player[];
-  spin: boolean;
-  spinTarget: number;
-  selectedSegment?: number;
-  topics: Topic[];
-  gameState: GameState;
-}
-
-export interface GameState {
   mode: GameMode;
   nextMode: GameMode;
+  players: Player[];
+  selectedSegment?: number;
   showInfo: boolean;
+  spin: boolean;
+  spinTarget: number;
+  started: boolean;
+  topic?: Topic;
+  topics: Topic[];
 }
 
 export interface Player {
+  assistant: boolean;
+  contestant: boolean;
+  expert: boolean;
   id: number;
   name: string;
-  contestant: boolean;
-  assistant: boolean;
-  expert: boolean;
+  score: number;
   shutdown: boolean;
 }
 
 export interface Topic {
-  name: string;
   active: boolean;
+  name: string;
   questions: Question[];
 }
 
 export enum GameMode {
-  Setup = 'SETUP',
+  AnswerQuestion = 'ANSWER_QUESTION',
+  PickAssistant = 'PICK_NON_CONTESTANT',
   PickContestant = 'PICK_CONTESTANT',
-  PickTopic = 'PICK_TOPIC',
   PickExpert = 'PICK_EXPERT',
   PickShutdown = 'PICK_SHUTDOWN',
-  PickAssistant = 'PICK_NON_CONTESTANT',
-  AnswerQuestion = 'ANSWER_QUESTION'
+  PickTopic = 'PICK_TOPIC',
+  Setup = 'SETUP'
 }
 
-export interface Question {
+export interface QuestionInput {
+  answers: Answer[];
+  question: string;
   topic: string;
-  expertPlayer: Player;
-  shutdownPlayer: Player;
-  answers: {
-    answer: string;
-    correct: boolean;
-  };
+}
+
+export interface Answer {
+  answer: string;
+  correct?: boolean;
+}
+
+export interface Question extends QuestionInput {
+  asked: boolean;
+}
+
+export interface QuestionObject {
+  [index: string]: Question[];
 }

@@ -1,5 +1,5 @@
 <template>
-  <div id="wrapper">
+  <div id="wrapper" :style="theme">
     <Stage />
     <Scoreboard />
     <transition name="fade">
@@ -25,6 +25,7 @@ import Stage from './components/Stage.vue';
 import Scoreboard from './components/Scoreboard.vue';
 import Info from './components/Info.vue';
 import { GameMode } from './types';
+import theme from './theme';
 
 export default defineComponent({
   name: 'App',
@@ -38,12 +39,15 @@ export default defineComponent({
       return this.$store.state.spin;
     },
     showInfo() {
-      return this.$store.state.gameState.showInfo;
+      return this.$store.state.showInfo;
     },
     showSpin() {
       return ![GameMode.PickExpert, GameMode.PickShutdown].includes(
-        this.$store.state.gameState.mode
+        this.$store.state.mode
       );
+    },
+    theme() {
+      return theme;
     }
   },
   methods: {
@@ -71,12 +75,12 @@ body {
 #controls {
   font-size: 8vh;
   position: absolute;
-  margin: 1rem;
+  margin: 1vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  color: white;
+  color: var(--white);
 }
 .spinning {
   animation: spin 1s infinite linear;
@@ -96,5 +100,25 @@ body {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+button {
+  font-size: 2vh;
+  padding: 1vh;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  border-radius: 1vh;
+  border: 0;
+  font-family: Avenir, Helvetica, sans-serif;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
+  margin-top: 3vh;
+}
+button:hover:not(:disabled) {
+  background-color: var(--grey);
+}
+button:focus {
+  outline: none;
 }
 </style>

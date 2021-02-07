@@ -20,7 +20,9 @@
             )
           }"
           :class="{
-            'stage-segment': true,
+            'stage-segment': segmentContent.length > 2,
+            'stage-segment-half': segmentContent.length === 2,
+            'stage-segment-whole': segmentContent.length === 1,
             'stage-segment-interactive': pickExpert || pickShutdown(segment),
             'stage-segment-pick-expert': pickExpert,
             'stage-segment-pick-shutdown': pickShutdown(segment)
@@ -48,15 +50,19 @@
 </template>
 
 <script lang="ts">
-import { GameMode, Player, Topic } from '@/types';
+import { GameMode, Player } from '@/types';
 import { defineComponent } from 'vue';
 import { SPIN_LENGTH } from '@/helpers';
+import theme from '@/theme';
 
 export default defineComponent({
   name: 'Stage',
   computed: {
-    players() {
-      return this.$store.state.players;
+    contestant() {
+      return this.$store.getters.getContestant;
+    },
+    expert() {
+      return this.$store.getters.getExpert;
     },
     spin() {
       return this.$store.state.spin;
@@ -64,17 +70,9 @@ export default defineComponent({
     spinTarget() {
       return this.$store.state.spinTarget;
     },
-    contestant() {
-      return this.$store.state.players.find(
-        (player: Player) => player.contestant
-      );
-    },
-    expert() {
-      return this.$store.state.players.find((player: Player) => player.expert);
-    },
     segmentContent() {
-      const { gameState, players, topics } = this.$store.state;
-      if (gameState.mode === GameMode.PickTopic) {
+      const { mode, players, topics } = this.$store.state;
+      if (mode === GameMode.PickTopic) {
         return topics;
       } else {
         return players.filter((player: Player) => !player.contestant);
@@ -84,27 +82,35 @@ export default defineComponent({
       return SPIN_LENGTH;
     },
     pickExpert() {
-      return this.$store.state.gameState.mode === GameMode.PickExpert;
+      return this.$store.state.mode === GameMode.PickExpert;
     }
   },
   methods: {
     segmentColor(segment: Player, segmentIndex: number, segmentCount: number) {
       if (segment.expert) {
-        return 'gold';
+        return theme['--gold'];
       } else if (segment.shutdown) {
-        return 'red';
+        return theme['--red'];
       } else {
         return `hsl(${360 * (segmentIndex / segmentCount)}, 100%, 80%)`;
       }
     },
     segmentTransform(segmentIndex: number, segmentCount: number) {
-      return `rotate(${(360 / segmentCount) * segmentIndex}deg) skewY(${-(
-        90 -
-        360 / segmentCount
-      )}deg)`;
+      if (segmentCount >= 3) {
+        return `rotate(${(360 / segmentCount) * segmentIndex}deg) skewY(${-(
+          90 -
+          360 / segmentCount
+        )}deg)`;
+      } else if (segmentCount === 2) {
+        return `rotate(${(360 / segmentCount) * segmentIndex}deg) skewY(0deg)`;
+      }
     },
     segmentTextTransform(segmentCount: number) {
-      return `skewY(${90 - 360 / segmentCount}deg) rotate(90deg)`;
+      if (segmentCount >= 3) {
+        return `skewY(${90 - 360 / segmentCount}deg) rotate(90deg)`;
+      } else if (segmentCount === 1) {
+        return `translateX(4vh)`;
+      }
     },
     setSegmentType(player: Player) {
       if (this.pickExpert) {
@@ -115,8 +121,8 @@ export default defineComponent({
     },
     pickShutdown(player: Player) {
       return (
-        this.$store.state.gameState.mode === GameMode.PickShutdown &&
-        player.id !== this.expert.id
+        this.$store.state.mode === GameMode.PickShutdown &&
+        player.id !== this.expert?.id
       );
     }
   }
@@ -125,7 +131,7 @@ export default defineComponent({
 
 <style scoped>
 #stage-wrapper {
-  background: #192841;
+  background-color: var(--blue1);
 }
 #stage,
 #stage-segments {
@@ -139,49 +145,70 @@ export default defineComponent({
   border-radius: 100%;
   border: 2px solid white;
 }
-.stage-segment {
+.stage-segment,
+.stage-segment-half,
+.stage-segment-whole {
   border: 2px solid white;
   position: absolute;
+  transition: background-color 0.25s ease-in-out, transform 1s ease-in-out;
+  transform: rotate(90deg);
+}
+.stage-segment {
   top: -10vh;
   left: 45vh;
   width: 55vh;
   height: 55vh;
-  transform: rotate(90deg);
   transform-origin: bottom left;
-  transition: background-color 0.25s ease-in-out, transform 1s ease-in-out;
+}
+.stage-segment-half {
+  top: -2vh;
+  left: 45vh;
+  height: 94vh;
+  width: 45vh;
+  transform-origin: center left;
+}
+.stage-segment-whole {
+  top: -2vh;
+  left: -2vh;
+  width: 94vh;
+  height: 94vh;
 }
 .stage-segment-interactive {
   cursor: pointer;
 }
 .stage-segment-pick-expert:hover {
-  background: gold !important;
+  background-color: var(--gold) !important;
 }
 .stage-segment-pick-shutdown:hover {
-  background: red !important;
+  background-color: var(--red) !important;
 }
 .stage-segment-text {
-  font-size: 1rem;
+  font-size: 2vh;
   font-size: 3vh;
   font-weight: bold;
   text-transform: uppercase;
   position: absolute;
   bottom: 43vh;
-  color: white;
+  color: var(--white);
   user-select: none;
   text-shadow: 0px 0px 3px black;
   max-width: 40vh;
   transform-origin: bottom left;
+}
+.stage-segment-half .stage-segment-text {
+  bottom: auto;
+  transform: rotate(90deg);
 }
 .stage-center {
   left: 35vh;
   top: 35vh;
   height: 20vh;
   width: 20vh;
-  background: #152238;
+  background-color: var(--blue);
   position: absolute;
   border-radius: 100%;
   z-index: 1;
-  color: white;
+  color: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -199,7 +226,7 @@ export default defineComponent({
   top: 45vh;
   height: 30vh;
   width: 2vh;
-  background: white;
+  background-color: var(--white);
   position: absolute;
   border-bottom-left-radius: 1vh;
   border-bottom-right-radius: 1vh;

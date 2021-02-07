@@ -1,4 +1,10 @@
-import { GameMode, Player, Topic } from './types';
+import {
+  GameMode,
+  Player,
+  QuestionInput,
+  QuestionObject,
+  Topic
+} from './types';
 
 export const SPIN_LENGTH = 5000;
 export const DEFAULT_PLAYER_COUNT = 4;
@@ -58,7 +64,8 @@ export const initialPlayer = {
   contestant: false,
   assistant: false,
   expert: false,
-  shutdown: false
+  shutdown: false,
+  score: 0
 };
 
 export const initialTopic = {
@@ -92,4 +99,18 @@ export const gameModeLabels = {
   [GameMode.PickShutdown]: 'Pick Shutdown',
   [GameMode.PickAssistant]: 'Pick Assistant',
   [GameMode.AnswerQuestion]: 'Answer Question'
+};
+
+export const formatQuestions = (questions: QuestionInput[]) => {
+  let questionObject: QuestionObject = {};
+
+  questions.forEach((question) => {
+    if (!questionObject[question.topic]) {
+      questionObject[question.topic] = [];
+    }
+
+    questionObject[question.topic].push({ ...question, asked: false });
+  });
+
+  return questionObject;
 };

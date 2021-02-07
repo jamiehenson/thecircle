@@ -25,6 +25,7 @@
     "eslint": "^6.7.2",
     "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-typescript-sort-keys": "^1.5.0",
     "eslint-plugin-vue": "^7.0.0-0",
     "prettier": "^2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
@@ -40,10 +41,12 @@
       "eslint:recommended",
       "@vue/typescript",
       "plugin:vue/recommended",
-      "prettier/vue"
+      "prettier/vue",
+      "plugin:typescript-sort-keys/recommended"
     ],
     "plugins": [
-      "prettier"
+      "prettier",
+      "typescript-sort-keys"
     ],
     "parserOptions": {
       "parser": "@typescript-eslint/parser"

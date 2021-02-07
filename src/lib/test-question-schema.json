@@ -8,5 +8,15 @@
             { "answer": "Underwhelming", "correct": true },
             { "answer": "Portugal" }
         ]
+    },
+    {
+        "topic": "GENERAL_KNOWLEDGE",
+        "question": "How small is this question?",
+        "answers": [
+            { "answer": "Tiny" },
+            { "answer": "Peen" },
+            { "answer": "Hidden", "correct": true },
+            { "answer": "Portugal" }
+        ]
     }
 ]

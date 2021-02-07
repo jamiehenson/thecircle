@@ -34,7 +34,7 @@ export default defineComponent({
 
 <style scoped>
 #setup-box {
-  background: #1c2e4a;
+  background-color: var(--blue2);
   padding: 3vh;
   border-radius: 1vh;
 }
