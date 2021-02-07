@@ -27,6 +27,7 @@ export const store = createStore<State>({
       mode: GameMode.Setup,
       nextMode: GameMode.PickContestant,
       showInfo: true,
+      showCredits: false,
       questions: formatQuestions(questions),
       finalQuestion: false
     };
@@ -131,7 +132,7 @@ export const store = createStore<State>({
     },
     spin(state) {
       state.spin = true;
-      const newSpinTarget = Math.floor(Math.random() * 540 + 720);
+      const newSpinTarget = Math.floor(Math.random() * 1080 + 720);
       state.spinTarget = newSpinTarget;
     },
     increasePlayers(state) {
@@ -150,6 +151,10 @@ export const store = createStore<State>({
     },
     closeInfo(state) {
       state.showInfo = false;
+    },
+    toggleCredits(state) {
+      state.showCredits = !state.showCredits;
+      state.showInfo = !state.showInfo;
     }
   },
   actions: {

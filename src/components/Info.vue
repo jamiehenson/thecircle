@@ -1,8 +1,17 @@
 <template>
   <div id="info-bg">
     <div id="info-box" :class="{ final: inQuestion && inFinalRound }">
-      <h1>{{ gameModeHeading }}</h1>
-      <div v-if="inSetup">
+      <div v-if="showCredits">
+        <h1>THE CIRCLE</h1>
+        <h2>Based off that thing on the telly. Made to pass the time during Lockdown 2021 🥴</h2>
+        <hr />
+        <h3>Code, design: Jamie Henson</h3>
+        <h3>Questions: Isabel Davies</h3>
+        <hr />
+        <button @click="toggleCredits">Cool, thanks</button>
+      </div>
+      <div v-else-if="inSetup">
+        <h1>THE CIRCLE</h1>
         <Setup />
         <button @click="startGame">Start New Game</button>
       </div>
@@ -17,8 +26,8 @@
         <button @click="startGame">Start New Game</button>
       </div>
       <div v-else>
-        <p>{{ contextualMessage }}</p>
-        <button @click="closeInfo">ADVANCE</button>
+        <h1>{{ contextualMessage }}</h1>
+        <button @click="closeInfo">{{ gameModeHeading }}</button>
       </div>
     </div>
   </div>
@@ -55,6 +64,9 @@ export default defineComponent({
     inFinalRound() {
       return this.$store.state.finalQuestion;
     },
+    showCredits() {
+      return this.$store.state.showCredits;
+    },
     gameModeHeading() {
       return gameModeLabels(this.$store.state.mode, this.$store.state.finalQuestion);
     },
@@ -64,15 +76,15 @@ export default defineComponent({
         this.$store.getters.getContestant?.score * (this.$store.getters.getAssistant?.scoreMultiplier || 1);
       switch (mode) {
         case GameMode.PickTopic:
-          return `Contestant: ${this.$store.getters.getContestant?.name}`;
+          return `${this.$store.getters.getContestant?.name}, you're up!`;
         case GameMode.PickExpert:
-          return `Topic: ${this.$store.getters.getTopic?.name}`;
+          return `${this.$store.getters.getTopic?.name} is the our new topic.`;
         case GameMode.PickShutdown:
-          return `Expert: ${this.$store.getters.getExpert?.name}`;
+          return `${this.$store.getters.getExpert?.name} is the expert on ${this.$store.getters.getTopic?.name}.`;
         case GameMode.PickAssistant:
-          return `Shutdown: ${this.$store.getters.getShutdown?.name}`;
+          return `${this.$store.getters.getShutdown?.name} will shut down the round.`;
         case GameMode.EndGame:
-          return `This is the end. Winner: ${this.$store.getters.getContestant?.name} - £${winnings}`;
+          return `Congratulations ${this.$store.getters.getContestant?.name}! You won £${winnings}.`;
         default:
           return "Let's go!";
       }
@@ -85,6 +97,9 @@ export default defineComponent({
     },
     closeInfo() {
       this.$store.commit('closeInfo');
+    },
+    toggleCredits() {
+      this.$store.commit('toggleCredits');
     }
   }
 });
@@ -102,7 +117,7 @@ export default defineComponent({
 }
 #info-box {
   background-color: var(--blue1);
-  border: 2px solid white;
+  border: 2px solid var(--white);
   color: var(--white);
   margin: 5vh auto;
   width: 60vh;

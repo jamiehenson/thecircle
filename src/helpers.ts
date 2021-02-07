@@ -1,6 +1,6 @@
 import { GameMode, Player, QuestionInput, QuestionObject, Topic } from './types';
 
-export const SPIN_LENGTH = 5000;
+export const SPIN_LENGTH = 7000;
 export const UI_INTERACTION_LENGTH = 5000;
 export const DEFAULT_PLAYER_COUNT = 4;
 export const MAX_PLAYERS = 12;
@@ -61,7 +61,7 @@ export const initialPlayer = {
   assistant: false,
   expert: false,
   shutdown: false,
-  score: 1000,
+  score: 0,
   assistanceScore: 0,
   finalRoundPlayed: false
 };
@@ -109,6 +109,22 @@ export const gameModeLabels = (mode: GameMode, finalQuestion: boolean) => {
   }
 
   return chosenLabel;
+};
+
+export const gameModeActionLabels = (mode: GameMode) => {
+  const labels = {
+    [GameMode.Setup]: 'Setting up the game',
+    [GameMode.PickTopic]: 'Picking a Topic',
+    [GameMode.PickContestant]: 'Picking a Contestant',
+    [GameMode.PickExpert]: 'Picking an Expert',
+    [GameMode.PickShutdown]: 'Picking a Shutdown',
+    [GameMode.PickAssistant]: 'Picking an Assistant',
+    [GameMode.AnswerQuestion]: 'Answering a Question',
+    [GameMode.PickFinalAssistant]: 'Picking a Final Assistant',
+    [GameMode.EndGame]: 'The end of the game!'
+  };
+
+  return labels[mode];
 };
 
 export const formatQuestions = (questions: QuestionInput[]) => {

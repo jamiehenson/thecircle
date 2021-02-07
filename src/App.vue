@@ -10,6 +10,7 @@
         <div v-if="showSpin" :class="{ spinning: spin }" @click="spinAndAdvance">🌀</div>
       </transition>
     </div>
+    <div id="credits" @click="toggleCredits">CREDITS</div>
   </div>
 </template>
 
@@ -45,6 +46,9 @@ export default defineComponent({
   methods: {
     spinAndAdvance() {
       this.$store.dispatch('spinAndAdvance');
+    },
+    toggleCredits() {
+      this.$store.commit('toggleCredits');
     }
   }
 });
@@ -73,6 +77,24 @@ body {
   align-items: center;
   cursor: pointer;
   color: var(--white);
+  transition: 0.2s text-shadow ease;
+}
+#controls:hover {
+  text-shadow: 0 0 3px var(--white);
+}
+#credits {
+  position: absolute;
+  color: var(--grey1);
+  bottom: 0;
+  left: 0;
+  font-size: 1.7vh;
+  padding: 1vh;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: 0.2s opacity ease;
+}
+#credits:hover {
+  opacity: 1;
 }
 .spinning {
   animation: spin 1s infinite linear;

@@ -129,12 +129,12 @@ export default defineComponent({
 #stage {
   margin: 5vh;
   border-radius: 100%;
-  border: 2px solid white;
+  border: 2px solid var(--white);
 }
 .stage-segment,
 .stage-segment-half,
 .stage-segment-whole {
-  border: 2px solid white;
+  border: 2px solid var(--white);
   position: absolute;
   transition: background-color 0.25s ease-in-out, transform 1s ease-in-out;
   transform: rotate(90deg);
@@ -200,7 +200,7 @@ export default defineComponent({
   justify-content: center;
   font-size: 3vh;
   font-weight: bold;
-  border: 2px solid white;
+  border: 2px solid var(--white);
   user-select: none;
   padding: 2vh;
   box-sizing: border-box;

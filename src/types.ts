@@ -5,6 +5,7 @@ export interface State {
   players: Player[];
   questions: QuestionObject;
   selectedSegment?: number;
+  showCredits: boolean;
   showInfo: boolean;
   spin: boolean;
   spinTarget: number;

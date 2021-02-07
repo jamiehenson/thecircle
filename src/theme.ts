@@ -12,6 +12,7 @@ export default {
   '--blue2': '#192841',
   '--blue3': '#1c2e4a',
   '--blue4': '#214cce',
+  '--blue5': '#273f66',
   '--grey': 'lightgrey',
   '--grey1': 'lightslategray'
 };
