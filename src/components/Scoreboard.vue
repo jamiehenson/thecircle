@@ -2,9 +2,7 @@
   <div id="scoreboard">
     <h1>The Circle</h1>
     <p>Stage: {{ gameMode }}</p>
-    <p>
-      Non-contestants: {{ nonContestants.map(({ name }) => name).join(', ') }}
-    </p>
+    <p>Non-contestants: {{ nonContestants.map(({ name }) => name).join(', ') }}</p>
     <hr />
     <p>Contestant: {{ contestant?.name || '?' }}</p>
     <p>Topic: {{ topic?.name || '?' }}</p>
@@ -15,9 +13,10 @@
     <h3>Scores:</h3>
     <ul>
       <li v-for="player in players" :key="player.name">
-        {{ player.name }}: {{ player.score }}
+        {{ player.name }}: £{{ player.score }} ({{ player.assistanceScore }})
       </li>
     </ul>
+    {{ topics.map((topic) => topic.name).join(', ') }}
   </div>
 </template>
 
@@ -53,13 +52,14 @@ export default defineComponent({
     state() {
       return this.$store.state;
     },
+    topics() {
+      return this.$store.state.topics;
+    },
     nonContestants() {
-      return this.$store.state.players.filter(
-        (player: Player) => !player.contestant
-      );
+      return this.$store.state.players.filter((player: Player) => !player.contestant);
     },
     gameMode() {
-      return gameModeLabels[this.$store.state.mode as GameMode];
+      return gameModeLabels(this.$store.state.mode, this.$store.state.finalQuestion);
     }
   }
 });

@@ -13,11 +13,7 @@
           :key="segmentIndex"
           :style="{
             transform: segmentTransform(segmentIndex, segmentContent.length),
-            backgroundColor: segmentColor(
-              segment,
-              segmentIndex,
-              segmentContent.length
-            )
+            backgroundColor: segmentColor(segment, segmentIndex, segmentContent.length)
           }"
           :class="{
             'stage-segment': segmentContent.length > 2,
@@ -35,11 +31,7 @@
             }"
             class="stage-segment-text"
           >
-            {{
-              `${segment.name}${segment.expert ? ' 👑' : ''}${
-                segment.shutdown ? ' ⛔️' : ''
-              }`
-            }}
+            {{ `${segment.name}${segment.expert ? ' 👑' : ''}${segment.shutdown ? ' ⛔️' : ''}` }}
           </span>
         </div>
       </div>
@@ -52,7 +44,7 @@
 <script lang="ts">
 import { GameMode, Player } from '@/types';
 import { defineComponent } from 'vue';
-import { SPIN_LENGTH } from '@/helpers';
+import { getActiveWheelPlayers, SPIN_LENGTH } from '@/helpers';
 import theme from '@/theme';
 
 export default defineComponent({
@@ -75,7 +67,7 @@ export default defineComponent({
       if (mode === GameMode.PickTopic) {
         return topics;
       } else {
-        return players.filter((player: Player) => !player.contestant);
+        return getActiveWheelPlayers(players);
       }
     },
     spinLength() {
@@ -97,10 +89,7 @@ export default defineComponent({
     },
     segmentTransform(segmentIndex: number, segmentCount: number) {
       if (segmentCount >= 3) {
-        return `rotate(${(360 / segmentCount) * segmentIndex}deg) skewY(${-(
-          90 -
-          360 / segmentCount
-        )}deg)`;
+        return `rotate(${(360 / segmentCount) * segmentIndex}deg) skewY(${-(90 - 360 / segmentCount)}deg)`;
       } else if (segmentCount === 2) {
         return `rotate(${(360 / segmentCount) * segmentIndex}deg) skewY(0deg)`;
       }
@@ -120,10 +109,7 @@ export default defineComponent({
       }
     },
     pickShutdown(player: Player) {
-      return (
-        this.$store.state.mode === GameMode.PickShutdown &&
-        player.id !== this.expert?.id
-      );
+      return this.$store.state.mode === GameMode.PickShutdown && player.id !== this.expert?.id;
     }
   }
 });
@@ -131,7 +117,7 @@ export default defineComponent({
 
 <style scoped>
 #stage-wrapper {
-  background-color: var(--blue1);
+  background-color: var(--blue2);
 }
 #stage,
 #stage-segments {
@@ -191,8 +177,8 @@ export default defineComponent({
   bottom: 43vh;
   color: var(--white);
   user-select: none;
-  text-shadow: 0px 0px 3px black;
-  max-width: 40vh;
+  text-shadow: 0px 0px 3px var(--black);
+  max-width: 30vh;
   transform-origin: bottom left;
 }
 .stage-segment-half .stage-segment-text {
@@ -204,7 +190,7 @@ export default defineComponent({
   top: 35vh;
   height: 20vh;
   width: 20vh;
-  background-color: var(--blue);
+  background-color: var(--blue1);
   position: absolute;
   border-radius: 100%;
   z-index: 1;

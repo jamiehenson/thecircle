@@ -7,13 +7,7 @@
     </transition>
     <div id="controls">
       <transition name="fade">
-        <div
-          v-if="showSpin"
-          :class="{ spinning: spin }"
-          @click="spinAndAdvance"
-        >
-          🌀
-        </div>
+        <div v-if="showSpin" :class="{ spinning: spin }" @click="spinAndAdvance">🌀</div>
       </transition>
     </div>
   </div>
@@ -42,9 +36,7 @@ export default defineComponent({
       return this.$store.state.showInfo;
     },
     showSpin() {
-      return ![GameMode.PickExpert, GameMode.PickShutdown].includes(
-        this.$store.state.mode
-      );
+      return ![GameMode.PickExpert, GameMode.PickShutdown].includes(this.$store.state.mode);
     },
     theme() {
       return theme;
@@ -120,5 +112,8 @@ button:hover:not(:disabled) {
 }
 button:focus {
   outline: none;
+}
+button:disabled {
+  pointer-events: none;
 }
 </style>

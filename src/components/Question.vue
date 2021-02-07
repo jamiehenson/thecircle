@@ -1,6 +1,6 @@
 <template>
   <div id="question-box">
-    <p>Assistant: {{ state.assistant?.name }}</p>
+    <p>Assistant: {{ assistant?.name }}</p>
     <h2>{{ currentQuestion.question }}</h2>
     <div id="answers-box">
       <button
@@ -8,7 +8,7 @@
         :key="answer.answer"
         :style="{
           backgroundColor: answerClass(answer),
-          color: isSelectedAnswer(answer) ? 'white' : 'black'
+          color: isSelectedAnswer(answer) ? theme['--white'] : theme['--black']
         }"
         :disabled="selectedAnswer && !isSelectedAnswer(answer)"
         @click="answerQuestion(answer)"
@@ -21,7 +21,8 @@
 
 <script lang="ts">
 import theme from '@/theme';
-import { Answer, GameMode, Player, Question } from '@/types';
+import { UI_INTERACTION_LENGTH } from '@/helpers';
+import { Answer, GameMode, Question } from '@/types';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -32,14 +33,15 @@ export default defineComponent({
     };
   },
   computed: {
-    state() {
-      return this.$store.state;
+    assistant() {
+      return this.$store.getters.getAssistant;
     },
     currentQuestion() {
-      const currentTopic: Question[] = this.state.questions[
-        'GENERAL_KNOWLEDGE'
-      ];
+      const currentTopic: Question[] = this.$store.state.questions['GENERAL_KNOWLEDGE'];
       return currentTopic[Math.floor(Math.random() * currentTopic.length)];
+    },
+    theme() {
+      return theme;
     }
   },
   methods: {
@@ -51,11 +53,16 @@ export default defineComponent({
 
       setTimeout(() => {
         if (answer.correct) {
-          this.$store.dispatch('goToNextQuestion');
+          if (this.$store.state.finalQuestion) {
+            this.$store.dispatch('changeGameMode', GameMode.EndGame);
+          } else {
+            this.$store.dispatch('goToNextQuestion');
+          }
         } else {
+          this.$store.dispatch('playerHasAttemptedFinalQuestion', this.$store.getters.getContestant);
           this.$store.dispatch('changeGameMode', GameMode.PickContestant);
         }
-      }, 5000);
+      }, UI_INTERACTION_LENGTH);
     },
     answerClass(answer: Answer) {
       if (this.isSelectedAnswer(answer)) {

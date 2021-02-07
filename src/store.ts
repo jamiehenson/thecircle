@@ -3,6 +3,7 @@ import { createStore, Store } from 'vuex';
 import {
   DEFAULT_PLAYER_COUNT,
   formatQuestions,
+  getActiveWheelPlayers,
   MAX_PLAYERS,
   MIN_PLAYERS,
   playerSetup,
@@ -26,8 +27,8 @@ export const store = createStore<State>({
       mode: GameMode.Setup,
       nextMode: GameMode.PickContestant,
       showInfo: true,
-      started: false,
-      questions: formatQuestions(questions)
+      questions: formatQuestions(questions),
+      finalQuestion: false
     };
   },
   mutations: {
@@ -35,6 +36,7 @@ export const store = createStore<State>({
       state.mode = GameMode.Setup;
       state.nextMode = GameMode.PickContestant;
       state.showInfo = true;
+      state.finalQuestion = false;
     },
     goToPickContestant(state) {
       const players = state.players.map((player) => ({
@@ -45,42 +47,60 @@ export const store = createStore<State>({
         shutdown: false
       }));
 
+      state.topics.forEach((topic) => (topic.active = false));
+
       state.players = players;
       state.mode = GameMode.PickContestant;
       state.nextMode = GameMode.PickTopic;
       state.showInfo = true;
-      state.started = true;
     },
     goToPickTopic(state) {
-      const existingContestant = state.players.find(
-        (player) => player.contestant
-      );
+      // const existingContestant = state.players.find((player) => player.contestant);
 
       state.topics.forEach((topic) => (topic.active = false));
 
-      const players = state.players.map((player, index) => ({
+      const activeWheelPlayerIds = getActiveWheelPlayers(state.players).map(({ id }: Player) => id);
+
+      state.players = state.players.map((player: Player) => {
+        if (activeWheelPlayerIds.includes(player.id)) {
+          return {
+            ...player,
+            contestant: activeWheelPlayerIds.indexOf(player.id) === state.selectedSegment,
+            expert: false,
+            shutdown: false,
+            assistant: false
+          };
+        } else {
+          return player;
+        }
+      });
+
+      state.mode = GameMode.PickTopic;
+
+      if (state.finalQuestion) {
+        state.topics = topicSetup(4);
+        state.nextMode = GameMode.PickFinalAssistant;
+      } else {
+        state.nextMode = GameMode.PickExpert;
+      }
+      state.showInfo = true;
+    },
+    goToPickExpert(state) {
+      const players = state.players.map((player) => ({
         ...player,
-        contestant: existingContestant
-          ? player === existingContestant
-          : index === state.selectedSegment,
         expert: false,
         shutdown: false,
         assistant: false
       }));
 
-      state.players = players;
-      state.mode = GameMode.PickTopic;
-      state.nextMode = GameMode.PickExpert;
-      state.showInfo = true;
-    },
-    goToPickExpert(state) {
-      const topics = state.topics.map((topic, index) => ({
-        ...topic,
-        active: index === state.selectedSegment
-      }));
+      if (state.topics.length > 1) {
+        state.topics = state.topics.map((topic, index) => ({
+          ...topic,
+          active: index === state.selectedSegment
+        }));
+      }
 
-      state.topics = topics;
-      state.topic = topics.find((topic) => topic.active);
+      state.players = players;
       state.mode = GameMode.PickExpert;
       state.nextMode = GameMode.PickShutdown;
       state.showInfo = true;
@@ -96,20 +116,22 @@ export const store = createStore<State>({
       state.showInfo = true;
     },
     goToAnswerQuestion(state) {
-      state.players
-        .filter((player: Player) => !player.contestant)
-        .forEach(
-          (player, index) =>
-            (player.assistant = index === state.selectedSegment)
-        );
-
       state.mode = GameMode.AnswerQuestion;
       state.nextMode = GameMode.AnswerQuestion;
       state.showInfo = true;
     },
+    goToPickFinalAssistant(state) {
+      state.mode = GameMode.PickFinalAssistant;
+      state.nextMode = GameMode.AnswerQuestion;
+      state.showInfo = true;
+    },
+    goToEndGame(state) {
+      state.mode = GameMode.EndGame;
+      state.nextMode = GameMode.Setup;
+    },
     spin(state) {
       state.spin = true;
-      const newSpinTarget = Math.floor(Math.random() * 360 + 720);
+      const newSpinTarget = Math.floor(Math.random() * 540 + 720);
       state.spinTarget = newSpinTarget;
     },
     increasePlayers(state) {
@@ -131,7 +153,7 @@ export const store = createStore<State>({
     }
   },
   actions: {
-    changeGameMode({ commit }, mode) {
+    changeGameMode({ commit, dispatch }, mode) {
       switch (mode) {
         case GameMode.Setup:
           commit('goToSetup');
@@ -152,7 +174,13 @@ export const store = createStore<State>({
           commit('goToPickTopic');
           break;
         case GameMode.AnswerQuestion:
-          commit('goToAnswerQuestion');
+          dispatch('answerQuestionOrPickContestant');
+          break;
+        case GameMode.PickFinalAssistant:
+          commit('goToPickFinalAssistant');
+          break;
+        case GameMode.EndGame:
+          commit('goToEndGame');
           break;
       }
     },
@@ -164,29 +192,24 @@ export const store = createStore<State>({
         state.spin = false;
         state.spinTarget = state.spinTarget % 360;
 
-        const { players, mode, nextMode } = state;
+        const { players, topics, mode, nextMode } = state;
 
-        const playerCount =
-          players.find((player) => player.contestant) &&
-          mode !== GameMode.PickTopic
-            ? players.length - 1
-            : players.length;
+        let segmentCount = 0;
+        if (mode === GameMode.PickTopic) {
+          segmentCount = topics.length;
+        } else {
+          segmentCount = getActiveWheelPlayers(players).length;
+        }
 
-        const segmentAngle = 360 / playerCount;
+        const segmentAngle = 360 / segmentCount;
         state.selectedSegment =
-          (playerCount -
-            Math.floor(
-              (state.spinTarget - (180 - segmentAngle)) / segmentAngle
-            )) %
-          playerCount;
+          (segmentCount - Math.floor((state.spinTarget - (180 - segmentAngle)) / segmentAngle)) % segmentCount;
 
         dispatch('changeGameMode', nextMode);
       }, SPIN_LENGTH);
     },
     setPlayerExpert({ dispatch, state }, id) {
-      const targetPlayer = state.players.find(
-        (player: Player) => player.id === id
-      );
+      const targetPlayer = state.players.find((player: Player) => player.id === id);
       if (targetPlayer) {
         targetPlayer.expert = true;
       }
@@ -194,9 +217,7 @@ export const store = createStore<State>({
       dispatch('changeGameMode', state.nextMode);
     },
     setPlayerShutdown({ dispatch, state }, id) {
-      const targetPlayer = state.players.find(
-        (player: Player) => player.id === id
-      );
+      const targetPlayer = state.players.find((player: Player) => player.id === id);
       if (targetPlayer) {
         targetPlayer.shutdown = true;
       }
@@ -206,24 +227,53 @@ export const store = createStore<State>({
     removeTopicFromPlay({ state }, targetTopic) {
       state.topics = state.topics.filter((topic) => topic !== targetTopic);
     },
-    goToNextQuestion({ state, dispatch }) {
-      const contestant = state.players.find(
-        (player: Player) => player.contestant
-      );
-
-      const assistant = state.players.find(
-        (player: Player) => player.assistant
-      );
-
+    goToNextQuestion({ state, dispatch, getters }) {
+      const contestant = getters.getContestant;
+      const assistant = getters.getAssistant;
       const increment = assistant?.expert ? 2000 : 1000;
 
-      if (contestant) {
-        contestant.score += increment;
+      contestant.score += increment;
+      assistant.assistanceScore += 1;
+
+      const newTopics = state.topics.filter((topic) => !topic.active);
+
+      if (newTopics.length === 0) {
+        state.finalQuestion = true;
+        dispatch('changeGameMode', GameMode.PickTopic);
+      } else if (newTopics.length === 1) {
+        state.topics = [{ ...newTopics[0], active: true }];
+        dispatch('changeGameMode', GameMode.PickExpert);
+      } else {
+        state.topics = newTopics;
+        dispatch('changeGameMode', GameMode.PickTopic);
       }
+    },
+    answerQuestionOrPickContestant({ state, commit, getters }) {
+      state.players
+        .filter((player: Player) => !player.contestant)
+        .forEach((player, index) => (player.assistant = index === state.selectedSegment));
 
-      state.topics = state.topics.filter((topic) => topic !== state.topic);
+      if (getters.getAssistant?.shutdown) {
+        commit('goToPickContestant');
+      } else {
+        commit('goToAnswerQuestion');
+      }
+    },
+    pickFinalAssistant({ state }, assistant) {
+      state.players = state.players.map((player: Player) => ({
+        ...player,
+        assistant: player.id === assistant.id,
+        scoreMultiplier: assistant.scoreMultiplier
+      }));
 
-      dispatch('changeGameMode', GameMode.PickTopic);
+      this.commit('goToAnswerQuestion');
+    },
+    playerHasAttemptedFinalQuestion({ state }, contestant) {
+      const targetPlayer = state.players.find((player: Player) => player.id === contestant.id);
+
+      if (targetPlayer) {
+        targetPlayer.finalRoundPlayed = true;
+      }
     }
   },
   getters: {
@@ -241,6 +291,12 @@ export const store = createStore<State>({
     },
     getTopic(state) {
       return state.topics.find((topic: Topic) => topic.active);
+    },
+    getTopicNames(state) {
+      return Object.keys(state.questions);
+    },
+    getNonContestants(state) {
+      return state.players.filter((player: Player) => !player.contestant);
     }
   }
 });

@@ -1,15 +1,10 @@
-import {
-  GameMode,
-  Player,
-  QuestionInput,
-  QuestionObject,
-  Topic
-} from './types';
+import { GameMode, Player, QuestionInput, QuestionObject, Topic } from './types';
 
 export const SPIN_LENGTH = 5000;
+export const UI_INTERACTION_LENGTH = 5000;
 export const DEFAULT_PLAYER_COUNT = 4;
-export const MAX_PLAYERS = 10;
-export const MIN_PLAYERS = 4;
+export const MAX_PLAYERS = 12;
+export const MIN_PLAYERS = 3;
 
 let testNames = [
   'Galina',
@@ -45,7 +40,8 @@ let testTopics = [
   'Netflix',
   'Anagrams',
   'Animals',
-  'Football'
+  'Football',
+  'History'
 ];
 
 export const chooseName = (names: string[]) => {
@@ -65,7 +61,9 @@ export const initialPlayer = {
   assistant: false,
   expert: false,
   shutdown: false,
-  score: 0
+  score: 1000,
+  assistanceScore: 0,
+  finalRoundPlayed: false
 };
 
 export const initialTopic = {
@@ -91,14 +89,26 @@ export const topicSetup = (defaultPlayerCount = 4): Topic[] => {
   }));
 };
 
-export const gameModeLabels = {
-  [GameMode.Setup]: 'THE CIRCLE',
-  [GameMode.PickTopic]: 'Pick Topic',
-  [GameMode.PickContestant]: 'Pick Contestant',
-  [GameMode.PickExpert]: 'Pick Expert',
-  [GameMode.PickShutdown]: 'Pick Shutdown',
-  [GameMode.PickAssistant]: 'Pick Assistant',
-  [GameMode.AnswerQuestion]: 'Answer Question'
+export const gameModeLabels = (mode: GameMode, finalQuestion: boolean) => {
+  const labels = {
+    [GameMode.Setup]: 'THE CIRCLE',
+    [GameMode.PickTopic]: 'Pick Topic',
+    [GameMode.PickContestant]: 'Pick Contestant',
+    [GameMode.PickExpert]: 'Pick Expert',
+    [GameMode.PickShutdown]: 'Pick Shutdown',
+    [GameMode.PickAssistant]: 'Pick Assistant',
+    [GameMode.AnswerQuestion]: 'Answer Question',
+    [GameMode.EndGame]: 'End Game',
+    [GameMode.PickFinalAssistant]: 'Pick Final Assistant'
+  };
+
+  let chosenLabel = labels[mode];
+
+  if (mode === GameMode.AnswerQuestion && finalQuestion) {
+    chosenLabel = '⭐️ Final Question ⭐️';
+  }
+
+  return chosenLabel;
 };
 
 export const formatQuestions = (questions: QuestionInput[]) => {
@@ -114,3 +124,6 @@ export const formatQuestions = (questions: QuestionInput[]) => {
 
   return questionObject;
 };
+
+export const getActiveWheelPlayers = (players: Player[]) =>
+  players.filter((player: Player) => !(player.contestant || player.finalRoundPlayed));

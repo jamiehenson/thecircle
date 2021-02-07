@@ -1,6 +1,6 @@
 <template>
   <div id="info-bg">
-    <div id="info-box">
+    <div id="info-box" :class="{ final: inQuestion && inFinalRound }">
       <h1>{{ gameModeHeading }}</h1>
       <div v-if="inSetup">
         <Setup />
@@ -8,6 +8,13 @@
       </div>
       <div v-else-if="inQuestion">
         <Question />
+      </div>
+      <div v-else-if="inPickFinalAssistant">
+        <PickFinalAssistant />
+      </div>
+      <div v-else-if="inEndGame">
+        <p>{{ contextualMessage }}</p>
+        <button @click="startGame">Start New Game</button>
       </div>
       <div v-else>
         <p>{{ contextualMessage }}</p>
@@ -18,17 +25,19 @@
 </template>
 
 <script lang="ts">
-import { GameMode, Player, Topic } from '@/types';
+import { GameMode } from '@/types';
 import { defineComponent } from 'vue';
 import Setup from './Setup.vue';
 import Question from './Question.vue';
+import PickFinalAssistant from './PickFinalAssistant.vue';
 import { gameModeLabels } from '@/helpers';
 
 export default defineComponent({
   name: 'Info',
   components: {
     Setup,
-    Question
+    Question,
+    PickFinalAssistant
   },
   computed: {
     inSetup() {
@@ -37,21 +46,33 @@ export default defineComponent({
     inQuestion() {
       return this.$store.state.mode === GameMode.AnswerQuestion;
     },
+    inEndGame() {
+      return this.$store.state.mode === GameMode.EndGame;
+    },
+    inPickFinalAssistant() {
+      return this.$store.state.mode === GameMode.PickFinalAssistant;
+    },
+    inFinalRound() {
+      return this.$store.state.finalQuestion;
+    },
     gameModeHeading() {
-      return gameModeLabels[this.$store.state.mode as GameMode];
+      return gameModeLabels(this.$store.state.mode, this.$store.state.finalQuestion);
     },
     contextualMessage() {
       const { mode } = this.$store.state;
-      const { PickTopic, PickExpert, PickShutdown, PickAssistant } = GameMode;
+      const winnings =
+        this.$store.getters.getContestant?.score * (this.$store.getters.getAssistant?.scoreMultiplier || 1);
       switch (mode) {
-        case PickTopic:
-          return `Contestant: ${this.$store.getters.getContestant.name}`;
-        case PickExpert:
-          return `Topic: ${this.$store.getters.getTopic.name}`;
-        case PickShutdown:
-          return `Expert: ${this.$store.getters.getExpert.name}`;
-        case PickAssistant:
-          return `Shutdown: ${this.$store.getters.getShutdown.name}`;
+        case GameMode.PickTopic:
+          return `Contestant: ${this.$store.getters.getContestant?.name}`;
+        case GameMode.PickExpert:
+          return `Topic: ${this.$store.getters.getTopic?.name}`;
+        case GameMode.PickShutdown:
+          return `Expert: ${this.$store.getters.getExpert?.name}`;
+        case GameMode.PickAssistant:
+          return `Shutdown: ${this.$store.getters.getShutdown?.name}`;
+        case GameMode.EndGame:
+          return `This is the end. Winner: ${this.$store.getters.getContestant?.name} - £${winnings}`;
         default:
           return "Let's go!";
       }
@@ -80,7 +101,7 @@ export default defineComponent({
   background-color: rgba(0, 0, 0, 0.8);
 }
 #info-box {
-  background-color: var(--blue);
+  background-color: var(--blue1);
   border: 2px solid white;
   color: var(--white);
   margin: 5vh auto;
@@ -92,6 +113,10 @@ export default defineComponent({
   text-align: center;
   max-height: 90vh;
   overflow-y: scroll;
+}
+#info-box.final {
+  background-color: var(--gold);
+  text-shadow: 0 0 3px var(--black);
 }
 h1 {
   margin-top: 0;

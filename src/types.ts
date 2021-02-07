@@ -1,23 +1,26 @@
 export interface State {
+  finalQuestion: boolean;
   mode: GameMode;
   nextMode: GameMode;
   players: Player[];
+  questions: QuestionObject;
   selectedSegment?: number;
   showInfo: boolean;
   spin: boolean;
   spinTarget: number;
-  started: boolean;
-  topic?: Topic;
   topics: Topic[];
 }
 
 export interface Player {
+  assistanceScore: number;
   assistant: boolean;
   contestant: boolean;
   expert: boolean;
+  finalRoundPlayed: boolean;
   id: number;
   name: string;
   score: number;
+  scoreMultiplier?: number;
   shutdown: boolean;
 }
 
@@ -29,9 +32,11 @@ export interface Topic {
 
 export enum GameMode {
   AnswerQuestion = 'ANSWER_QUESTION',
-  PickAssistant = 'PICK_NON_CONTESTANT',
+  EndGame = 'END_GAME',
+  PickAssistant = 'PICK_ASSISTANT',
   PickContestant = 'PICK_CONTESTANT',
   PickExpert = 'PICK_EXPERT',
+  PickFinalAssistant = 'PICK_GOLDEN_ASSISTANT',
   PickShutdown = 'PICK_SHUTDOWN',
   PickTopic = 'PICK_TOPIC',
   Setup = 'SETUP'
